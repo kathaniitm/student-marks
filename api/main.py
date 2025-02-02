@@ -14,16 +14,16 @@ from typing import List
 
 app = FastAPI()
 
-# Define the path to the JSON file in the root directory
+# Path to JSON file in the root directory
 json_file_path = os.path.join(os.path.dirname(__file__), "../q-vercel-python.json")
 
-# Function to load the JSON file
+# Function to load JSON data
 def load_json_data():
     try:
         with open(json_file_path, "r") as file:
-            return json.load(file)
+            return json.load(file)  # Load as a list of dictionaries
     except FileNotFoundError:
-        return {}  # Return an empty dictionary if the file is not found
+        return []  # Return an empty list if the file is not found
 
 @app.get("/")
 def read_root():
@@ -31,7 +31,13 @@ def read_root():
 
 @app.get("/api")
 def get_marks(name: List[str] = Query(...)):
-    """Fetch marks for given names from q-vercel-python.json"""
-    marks_data = load_json_data()
-    result = [marks_data.get(n, 0) for n in name]
+    """Fetch marks for given names from JSON file"""
+    data = load_json_data()
+    
+    # Convert list of dictionaries into a lookup dictionary for quick search
+    name_to_marks = {entry["name"]: entry["marks"] for entry in data}
+
+    # Retrieve marks in the requested order
+    result = [name_to_marks.get(n, 0) for n in name]
+
     return {"marks": result}
