@@ -40,11 +40,11 @@ def read_root():
     return {"message": "Hello, World!"}
 
 @app.get("/api")
-def get_marks(name: Optional[List[str]] = Query(None)):
+def get_marks(name: Optional[List[str]] = Query(default=None)):
     """Fetch marks for given names, or return all if no names are provided"""
     data = load_json_data()
     
-    if name is None:  
+    if not name:  
         # No names were provided, return all data
         return {"marks": data}
     
