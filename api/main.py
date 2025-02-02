@@ -10,9 +10,19 @@
 import json
 import os
 from fastapi import FastAPI, Query
-from typing import List
+from fastapi.middleware.cors import CORSMiddleware
+from typing import List, Optional
 
 app = FastAPI()
+
+# Enable CORS (Allow requests from any origin)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allow all origins
+    allow_credentials=True,
+    allow_methods=["GET"],  # Allow only GET requests
+    allow_headers=["*"],  # Allow all headers
+)
 
 # Path to JSON file in the root directory
 json_file_path = os.path.join(os.path.dirname(__file__), "../q-vercel-python.json")
@@ -30,14 +40,18 @@ def read_root():
     return {"message": "Hello, World!"}
 
 @app.get("/api")
-def get_marks(name: List[str] = Query(...)):
-    """Fetch marks for given names from JSON file"""
+def get_marks(name: Optional[List[str]] = Query(None)):
+    """Fetch marks for given names, or return all if no names are provided"""
     data = load_json_data()
     
-    # Convert list of dictionaries into a lookup dictionary for quick search
+    if name is None:  
+        # No names were provided, return all data
+        return {"marks": data}
+    
+    # Convert list of dictionaries into a lookup dictionary for fast search
     name_to_marks = {entry["name"]: entry["marks"] for entry in data}
 
     # Retrieve marks in the requested order
-    result = [name_to_marks.get(n, 0) for n in name]
+    result = [{"name": n, "marks": name_to_marks.get(n, 0)} for n in name]
 
     return {"marks": result}
